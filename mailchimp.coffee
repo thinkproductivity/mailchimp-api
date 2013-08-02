@@ -6,7 +6,7 @@ OPTS = {
     port:   443,
     prefix: '/2.0/',
     method: 'POST',
-    headers: {'Content-Type': 'application/json', 'User-Agent': 'MailChimp-Node/2.0.0'}
+    headers: {'Content-Type': 'application/json', 'User-Agent': 'MailChimp-Node/2.0.1'}
 }
 
 class exports.Mailchimp

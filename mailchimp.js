@@ -10,7 +10,7 @@
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'User-Agent': 'MailChimp-Node/2.0.0'
+      'User-Agent': 'MailChimp-Node/2.0.1'
     }
   };
 
