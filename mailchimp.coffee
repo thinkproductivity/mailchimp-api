@@ -6,7 +6,7 @@ OPTS = {
     port:   443,
     prefix: '/2.0/',
     method: 'POST',
-    headers: {'Content-Type': 'application/json', 'User-Agent': 'MailChimp-Node/2.0.1'}
+    headers: {'Content-Type': 'application/json', 'User-Agent': 'MailChimp-Node/2.0.2'}
 }
 
 class exports.Mailchimp
@@ -52,9 +52,9 @@ class exports.Mailchimp
                 try
                     json = JSON.parse(json)
                 catch e
-                    json = {status: 'error', name: 'GeneralError', message: e}
+                    json = {status: 'error', name: 'GeneralError', error: e}
                 
-                json ?= {status: 'error', name: 'GeneralError', message: 'An unexpected error occurred'}
+                json ?= {status: 'error', name: 'GeneralError', error: 'An unexpected error occurred'}
                 if res.statusCode != 200
                     if onerror then onerror(json) else @onerror(json)
                 else
@@ -64,13 +64,13 @@ class exports.Mailchimp
         req.write(params)
         req.end()
         req.on('error', (e) =>
-            if onerror then onerror(e) else @onerror({status: 'error', name: 'GeneralError', message: e})
+            if onerror then onerror(e) else @onerror({status: 'error', name: 'GeneralError', error: e})
         )
 
         return null
 
     onerror: (err) ->
-        throw {name: err.name, message: err.message, toString: -> "#{err.name}: #{err.message}"}
+        throw {name: err.name, error: err.error, toString: -> "#{err.name}: #{err.error}"}
         
     parseArgs: (params, onsuccess, onerror) ->
         return [params, onsuccess, onerror] if typeof params isnt 'function'
@@ -800,8 +800,8 @@ grouping will automatically turn them on.
     Get the most recent 100 activities for particular list members (open, click, bounce, unsub, abuse, sent to, etc.)
     @param {Object} params the hash of the parameters to pass to the request
     @option params {String} id the list id to connect to. Get by calling lists()
-    @option params {Array} emails an array of up to 50 email address struct to retrieve activity information for
-         - email {String} an email address
+    @option params {Array} emails an array of up to 50 email structs, each with with one of the following keys
+         - email {String} an email address - for new subscribers obviously this should be used
          - euid {String} the unique id for an email address (not list related) - the email "id" returned from listMemberInfo, Webhooks, Campaigns, etc.
          - leid {String} the list email id (previously called web_id) for a list-member-info type call. this doesn't change when the email address changes
     @param {Function} onsuccess an optional callback to execute when the API call is successfully made
@@ -817,8 +817,8 @@ grouping will automatically turn them on.
     Get all the information for particular members of a list
     @param {Object} params the hash of the parameters to pass to the request
     @option params {String} id the list id to connect to. Get by calling lists()
-    @option params {Array} emails an array of up to 50 email address struct to retrieve member information for
-         - email {String} an email address
+    @option params {Array} emails an array of up to 50 email structs, each with with one of the following keys
+         - email {String} an email address - for new subscribers obviously this should be used
          - euid {String} the unique id for an email address (not list related) - the email "id" returned from listMemberInfo, Webhooks, Campaigns, etc.
          - leid {String} the list email id (previously called web_id) for a list-member-info type call. this doesn't change when the email address changes
     @param {Function} onsuccess an optional callback to execute when the API call is successfully made
@@ -961,7 +961,7 @@ When using proper segments, Static Segments are one of the available options for
 options), though performance may degrade at that point.
     @param {Object} params the hash of the parameters to pass to the request
     @option params {String} id the list id to connect to. Get by calling lists()
-    @option params {String} name a unique name per list for the segment - 50 byte maximum length, anything longer will throw an error
+    @option params {String} name a unique name per list for the segment - 100 byte maximum length, anything longer will throw an error
     @param {Function} onsuccess an optional callback to execute when the API call is successfully made
     @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
     ###
@@ -1371,7 +1371,7 @@ class Campaigns
     ###
     Get the list of campaigns and their details matching the specified filters
     @param {Object} params the hash of the parameters to pass to the request
-    @option params {Array} filters a hash of filters to apply to this query - all are optional:
+    @option params {Struct} filters a struct of filters to apply to this query - all are optional:
          - campaign_id {String} optional - return the campaign using a know campaign_id.  Accepts multiples separated by commas when not using exact matching.
          - parent_id {String} optional - return the child campaigns using a known parent campaign_id.  Accepts multiples separated by commas when not using exact matching.
          - list_id {String} optional - the list to send this campaign to - get lists using lists(). Accepts multiples separated by commas when not using exact matching.
@@ -1604,8 +1604,8 @@ class Vip
     Add VIPs (previously called Golden Monkeys)
     @param {Object} params the hash of the parameters to pass to the request
     @option params {String} id the list id to connect to. Get by calling lists()
-    @option params {Array} emails an array of up to 50 email address structs to add
-         - email {String} an email address
+    @option params {Array} emails an array of up to 50 email address structs to add, each with with one of the following keys
+         - email {String} an email address - for new subscribers obviously this should be used
          - euid {String} the unique id for an email address (not list related) - the email "id" returned from listMemberInfo, Webhooks, Campaigns, etc.
          - leid {String} the list email id (previously called web_id) for a list-member-info type call. this doesn't change when the email address changes
     @param {Function} onsuccess an optional callback to execute when the API call is successfully made
@@ -1621,8 +1621,8 @@ class Vip
     Remove VIPs - this does not affect list membership
     @param {Object} params the hash of the parameters to pass to the request
     @option params {String} id the list id to connect to. Get by calling lists()
-    @option params {Array} emails an array of up to 50 email address structs to remove
-         - email {String} an email address
+    @option params {Array} emails an array of up to 50 email address structs to remove, each with with one of the following keys
+         - email {String} an email address - for new subscribers obviously this should be used
          - euid {String} the unique id for an email address (not list related) - the email "id" returned from listMemberInfo, Webhooks, Campaigns, etc.
          - leid {String} the list email id (previously called web_id) for a list-member-info type call. this doesn't change when the email address changes
     @param {Function} onsuccess an optional callback to execute when the API call is successfully made
