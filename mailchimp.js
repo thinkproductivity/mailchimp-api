@@ -10,7 +10,7 @@
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'User-Agent': 'MailChimp-Node/2.0.3'
+      'User-Agent': 'MailChimp-Node/2.0.4'
     }
   };
 
@@ -148,7 +148,7 @@
     /*
         Delete a campaign, autoresponder, or template folder. Note that this will simply make whatever was in the folder appear unfiled, no other data is removed
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {Int} fid the folder id to delete - retrieve from folders()
+        @option params {Int} fid the folder id to delete - retrieve from folders/list()
         @option params {String} type the type of folder to delete - either "campaign", "autoresponder", or "template"
         @param {Function} onsuccess an optional callback to execute when the API call is successfully made
         @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
@@ -179,7 +179,7 @@
     /*
         Update the name of a folder for campaigns, autoresponders, or templates
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {Int} fid the folder id to update - retrieve from folders()
+        @option params {Int} fid the folder id to update - retrieve from folders/list()
         @option params {String} name a new, unique name for the folder (max 100 bytes)
         @option params {String} type the type of folder to update - one of "campaign", "autoresponder", or "template".
         @param {Function} onsuccess an optional callback to execute when the API call is successfully made
@@ -239,7 +239,7 @@
     /*
         Pull details for a specific template to help support editing
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {Int} template_id the template id - get from templates()
+        @option params {Int} template_id the template id - get from templates/list()
         @option params {String} type optional the template type to load - one of 'user', 'gallery', 'base', defaults to user.
         @param {Function} onsuccess an optional callback to execute when the API call is successfully made
         @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
@@ -414,6 +414,20 @@
       return this.master.call('users/logins', params, onsuccess, onerror);
     };
 
+    /*
+        Retrieve the profile for the login owning the provided API Key
+        @param {Object} params the hash of the parameters to pass to the request
+        @param {Function} onsuccess an optional callback to execute when the API call is successfully made
+        @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
+    */
+
+    Users.prototype.profile = function(params, onsuccess, onerror) {
+      var _ref;
+      if (params == null) params = {};
+      _ref = this.master.parseArgs(params, onsuccess, onerror), params = _ref[0], onsuccess = _ref[1], onerror = _ref[2];
+      return this.master.call('users/profile', params, onsuccess, onerror);
+    };
+
     return Users;
 
   })();
@@ -575,7 +589,7 @@
         Search account wide or on a specific list using the specified query terms
         @param {Object} params the hash of the parameters to pass to the request
         @option params {String} query terms to search on, <a href="http://kb.mailchimp.com/article/i-cant-find-a-recipient-on-my-list" target="_blank">just like you do in the app</a>
-        @option params {String} id optional the list id to limit the search to. Get by calling lists()
+        @option params {String} id optional the list id to limit the search to. Get by calling lists/list()
         @option params {Int} offset optional the paging offset to use if more than 100 records match
         @param {Function} onsuccess an optional callback to execute when the API call is successfully made
         @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
@@ -721,7 +735,7 @@
     /*
         Get all email addresses that complained about a campaign sent to a list
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} id the list id to pull abuse reports for (can be gathered using lists())
+        @option params {String} id the list id to pull abuse reports for (can be gathered using lists/list())
         @option params {Int} start optional for large data sets, the page number to start at - defaults to 1st page of data  (page 0)
         @option params {Int} limit optional for large data sets, the number of results to return - defaults to 500, upper limit set at 1000
         @option params {String} since optional pull only messages since this time - 24 hour format in <strong>GMT</strong>, eg "2013-12-30 20:30:00"
@@ -742,7 +756,7 @@
     /*
         Access up to the previous 180 days of daily detailed aggregated activity stats for a given list. Does not include AutoResponder activity.
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} id the list id to connect to. Get by calling lists()
+        @option params {String} id the list id to connect to. Get by calling lists/list()
         @param {Function} onsuccess an optional callback to execute when the API call is successfully made
         @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
     */
@@ -759,7 +773,7 @@
     only run this method as a POST request, and <em>not</em> a GET request. Maximum batch sizes vary based on the amount of data in each record,
     though you should cap them at 5k - 10k records, depending on your experience. These calls are also long, so be sure you increase your timeout values.
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} id the list id to connect to. Get by calling lists()
+        @option params {String} id the list id to connect to. Get by calling lists/list()
         @option params {Array} batch an array of structs for each address using the following keys:
              - email {Object} a struct with one of the following keys - failing to provide anything will produce an error relating to the email address. Provide multiples and we'll use the first we see in this same order.
                  - email {String} an email address
@@ -787,7 +801,7 @@
     /*
         Unsubscribe a batch of email addresses from a list
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} id the list id to connect to. Get by calling lists()
+        @option params {String} id the list id to connect to. Get by calling lists/list()
         @option params {Array} batch array of structs to unsubscribe, each with one of the following keys - failing to provide anything will produce an error relating to the email address. Provide multiples and we'll use the first we see in this same order.
              - email {String} an email address
              - euid {String} the unique id for an email address (not list related) - the email "id" returned from listMemberInfo, Webhooks, Campaigns, etc.
@@ -812,7 +826,7 @@
     /*
         Retrieve the clients that the list's subscribers have been tagged as being used based on user agents seen. Made possible by <a href="http://user-agent-string.info" target="_blank">user-agent-string.info</a>
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} id the list id to connect to. Get by calling lists()
+        @option params {String} id the list id to connect to. Get by calling lists/list()
         @param {Function} onsuccess an optional callback to execute when the API call is successfully made
         @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
     */
@@ -827,7 +841,7 @@
     /*
         Access the Growth History by Month in aggregate or for a given list.
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} id optional - if provided, the list id to connect to. Get by calling lists/list. Otherwise the aggregate for the account.
+        @option params {String} id optional - if provided, the list id to connect to. Get by calling lists/list(). Otherwise the aggregate for the account.
         @param {Function} onsuccess an optional callback to execute when the API call is successfully made
         @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
     */
@@ -843,7 +857,7 @@
     /*
         Get the list of interest groupings for a given list, including the label, form information, and included groups for each
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} id the list id to connect to. Get by calling lists()
+        @option params {String} id the list id to connect to. Get by calling lists/list()
         @option params {Bool} counts optional whether or not to return subscriber counts for each group. defaults to false since that slows this call down a ton for large lists.
         @param {Function} onsuccess an optional callback to execute when the API call is successfully made
         @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
@@ -861,9 +875,9 @@
         Add a single Interest Group - if interest groups for the List are not yet enabled, adding the first
     group will automatically turn them on.
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} id the list id to connect to. Get by calling lists()
+        @option params {String} id the list id to connect to. Get by calling lists/list()
         @option params {String} group_name the interest group to add - group names must be unique within a grouping
-        @option params {Int} grouping_id optional The grouping to add the new group to - get using listInterestGrouping() . If not supplied, the first grouping on the list is used.
+        @option params {Int} grouping_id optional The grouping to add the new group to - get using lists/interest-groupings() . If not supplied, the first grouping on the list is used.
         @param {Function} onsuccess an optional callback to execute when the API call is successfully made
         @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
     */
@@ -879,9 +893,9 @@
     /*
         Delete a single Interest Group - if the last group for a list is deleted, this will also turn groups for the list off.
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} id the list id to connect to. Get by calling lists()
+        @option params {String} id the list id to connect to. Get by calling lists/list()
         @option params {String} group_name the interest group to delete
-        @option params {Int} grouping_id The grouping to delete the group from - get using listInterestGrouping() . If not supplied, the first grouping on the list is used.
+        @option params {Int} grouping_id The grouping to delete the group from - get using lists/interest-groupings() . If not supplied, the first grouping on the list is used.
         @param {Function} onsuccess an optional callback to execute when the API call is successfully made
         @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
     */
@@ -897,10 +911,10 @@
     /*
         Change the name of an Interest Group
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} id the list id to connect to. Get by calling lists()
+        @option params {String} id the list id to connect to. Get by calling lists/list()
         @option params {String} old_name the interest group name to be changed
         @option params {String} new_name the new interest group name to be set
-        @option params {Int} grouping_id optional The grouping to delete the group from - get using listInterestGrouping() . If not supplied, the first grouping on the list is used.
+        @option params {Int} grouping_id optional The grouping to delete the group from - get using lists/interest-groupings() . If not supplied, the first grouping on the list is used.
         @param {Function} onsuccess an optional callback to execute when the API call is successfully made
         @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
     */
@@ -917,7 +931,7 @@
         Add a new Interest Grouping - if interest groups for the List are not yet enabled, adding the first
     grouping will automatically turn them on.
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} id the list id to connect to. Get by calling lists()
+        @option params {String} id the list id to connect to. Get by calling lists/list()
         @option params {String} name the interest grouping to add - grouping names must be unique
         @option params {String} type The type of the grouping to add - one of "checkboxes", "hidden", "dropdown", "radio"
         @option params {Array} groups The lists of initial group names to be added - at least 1 is required and the names must be unique within a grouping. If the number takes you over the 60 group limit, an error will be thrown.
@@ -935,7 +949,7 @@
     /*
         Delete an existing Interest Grouping - this will permanently delete all contained interest groups and will remove those selections from all list members
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {Int} grouping_id the interest grouping id - get from listInterestGroupings()
+        @option params {Int} grouping_id the interest grouping id - get from lists/interest-groupings()
         @param {Function} onsuccess an optional callback to execute when the API call is successfully made
         @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
     */
@@ -950,7 +964,7 @@
     /*
         Update an existing Interest Grouping
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {Int} grouping_id the interest grouping id - get from listInterestGroupings()
+        @option params {Int} grouping_id the interest grouping id - get from lists/interest-groupings()
         @option params {String} name The name of the field to update - either "name" or "type". Groups within the grouping should be manipulated using the standard listInterestGroup* methods
         @option params {String} value The new value of the field. Grouping names must be unique - only "hidden" and "checkboxes" grouping types can be converted between each other.
         @param {Function} onsuccess an optional callback to execute when the API call is successfully made
@@ -967,7 +981,7 @@
     /*
         Retrieve the locations (countries) that the list's subscribers have been tagged to based on geocoding their IP address
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} id the list id to connect to. Get by calling lists()
+        @option params {String} id the list id to connect to. Get by calling lists/list()
         @param {Function} onsuccess an optional callback to execute when the API call is successfully made
         @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
     */
@@ -982,7 +996,7 @@
     /*
         Get the most recent 100 activities for particular list members (open, click, bounce, unsub, abuse, sent to, etc.)
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} id the list id to connect to. Get by calling lists()
+        @option params {String} id the list id to connect to. Get by calling lists/list()
         @option params {Array} emails an array of up to 50 email structs, each with with one of the following keys
              - email {String} an email address - for new subscribers obviously this should be used
              - euid {String} the unique id for an email address (not list related) - the email "id" returned from listMemberInfo, Webhooks, Campaigns, etc.
@@ -1001,7 +1015,7 @@
     /*
         Get all the information for particular members of a list
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} id the list id to connect to. Get by calling lists()
+        @option params {String} id the list id to connect to. Get by calling lists/list()
         @option params {Array} emails an array of up to 50 email structs, each with with one of the following keys
              - email {String} an email address - for new subscribers obviously this should be used
              - euid {String} the unique id for an email address (not list related) - the email "id" returned from listMemberInfo, Webhooks, Campaigns, etc.
@@ -1019,9 +1033,9 @@
 
     /*
         Get all of the list members for a list that are of a particular status and potentially matching a segment. This will cause locking, so don't run multiples at once. Are you trying to get a dump including lots of merge
-    data or specific members of a list? If so, checkout the <a href="export/1.0/list.func.php">List Export API</a>
+    data or specific members of a list? If so, checkout the <a href="/export/1.0/list.func.php">List Export API</a>
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} id the list id to connect to. Get by calling lists()
+        @option params {String} id the list id to connect to. Get by calling lists/list()
         @option params {String} status the status to get members for - one of(subscribed, unsubscribed, <a target="_blank" href="http://eepurl.com/gWOO">cleaned</a>), defaults to subscribed
         @option params {Struct} opts various options for controlling returned data
              - start {Int} optional for large data sets, the page number to start at - defaults to 1st page of data  (page 0)
@@ -1045,16 +1059,16 @@
     /*
         Add a new merge tag to a given list
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} id the list id to connect to. Get by calling lists()
+        @option params {String} id the list id to connect to. Get by calling lists/list()
         @option params {String} tag The merge tag to add, e.g. FNAME. 10 bytes max, valid characters: "A-Z 0-9 _" no spaces, dashes, etc. Some tags and prefixes are <a href="http://kb.mailchimp.com/article/i-got-a-message-saying-that-my-list-field-name-is-reserved-and-cant-be-used" target="_blank">reserved</a>
         @option params {String} name The long description of the tag being added, used for user displays - max 50 bytes
-        @option params {Array} options optional Various options for this merge var. <em>note:</em> for historical purposes this can also take a "boolean"
+        @option params {Struct} options optional Various options for this merge var
              - field_type {String} optional one of: text, number, radio, dropdown, date, address, phone, url, imageurl, zip, birthday - defaults to text
              - req {Boolean} optional indicates whether the field is required - defaults to false
              - public {Boolean} optional indicates whether the field is displayed in public - defaults to true
              - show {Boolean} optional indicates whether the field is displayed in the app's list member view - defaults to true
              - order {Int} The order this merge tag should be displayed in - this will cause existing values to be reset so this fits
-             - default_value {String} optional the default value for the field. See subscribe() for formatting info. Defaults to blank - max 255 bytes
+             - default_value {String} optional the default value for the field. See lists/subscribe() for formatting info. Defaults to blank - max 255 bytes
              - helptext {String} optional the help text to be used with some newer forms. Defaults to blank - max 255 bytes
              - choices {Array} optional kind of - an array of strings to use as the choices for radio and dropdown type fields
              - dateformat {String} optional only valid for birthday and date fields. For birthday type, must be "MM/DD" (default) or "DD/MM". For date type, must be "MM/DD/YYYY" (default) or "DD/MM/YYYY". Any other values will be converted to the default.
@@ -1076,7 +1090,7 @@
         Delete a merge tag from a given list and all its members. Seriously - the data is removed from all members as well!
     Note that on large lists this method may seem a bit slower than calls you typically make.
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} id the list id to connect to. Get by calling lists()
+        @option params {String} id the list id to connect to. Get by calling lists/list()
         @option params {String} tag The merge tag to delete
         @param {Function} onsuccess an optional callback to execute when the API call is successfully made
         @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
@@ -1092,7 +1106,7 @@
     /*
         Completely resets all data stored in a merge var on a list. All data is removed and this action can not be undone.
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} id the list id to connect to. Get by calling lists()
+        @option params {String} id the list id to connect to. Get by calling lists/list()
         @option params {String} tag The merge tag to reset
         @param {Function} onsuccess an optional callback to execute when the API call is successfully made
         @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
@@ -1109,9 +1123,9 @@
         Sets a particular merge var to the specified value for every list member. Only merge var ids 1 - 30 may be modified this way. This is generally a dirty method
     unless you're fixing data since you should probably be using default_values and/or conditional content. as with lists/merge-var-reset(), this can not be undone.
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} id the list id to connect to. Get by calling lists()
+        @option params {String} id the list id to connect to. Get by calling lists/list()
         @option params {String} tag The merge tag to reset
-        @option params {String} value The value to set - see subscribe() for formatting. Must validate to something non-empty.
+        @option params {String} value The value to set - see lists/subscribe() for formatting. Must validate to something non-empty.
         @param {Function} onsuccess an optional callback to execute when the API call is successfully made
         @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
     */
@@ -1126,9 +1140,9 @@
     /*
         Update most parameters for a merge tag on a given list. You cannot currently change the merge type
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} id the list id to connect to. Get by calling lists()
+        @option params {String} id the list id to connect to. Get by calling lists/list()
         @option params {String} tag The merge tag to update
-        @option params {Struct} options The options to change for a merge var. See listMergeVarAdd() for valid options. "tag" and "name" may also be used here.
+        @option params {Struct} options The options to change for a merge var. See lists/merge-var-add() for valid options. "tag" and "name" may also be used here.
         @param {Function} onsuccess an optional callback to execute when the API call is successfully made
         @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
     */
@@ -1143,7 +1157,7 @@
     /*
         Get the list of merge tags for a given list, including their name, tag, and required setting
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {Array} id the list ids to retrieve merge vars for. Get by calling lists() - max of 100
+        @option params {Array} id the list ids to retrieve merge vars for. Get by calling lists/list() - max of 100
         @param {Function} onsuccess an optional callback to execute when the API call is successfully made
         @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
     */
@@ -1156,12 +1170,111 @@
     };
 
     /*
+        Retrieve all of Segments for a list.
+        @param {Object} params the hash of the parameters to pass to the request
+        @option params {String} id the list id to connect to. Get by calling lists/list()
+        @option params {String} type optional, if specified should be "static" or "saved" and will limit the returned entries to that type
+        @param {Function} onsuccess an optional callback to execute when the API call is successfully made
+        @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
+    */
+
+    Lists.prototype.segments = function(params, onsuccess, onerror) {
+      var _ref;
+      if (params == null) params = {};
+      _ref = this.master.parseArgs(params, onsuccess, onerror), params = _ref[0], onsuccess = _ref[1], onerror = _ref[2];
+      if (params["type"] == null) params["type"] = null;
+      return this.master.call('lists/segments', params, onsuccess, onerror);
+    };
+
+    /*
+        Save a segment against a list for later use. There is no limit to the number of segments which can be saved. Static Segments <strong>are not</strong> tied
+    to any merge data, interest groups, etc. They essentially allow you to configure an unlimited number of custom segments which will have standard performance.
+    When using proper segments, Static Segments are one of the available options for segmentation just as if you used a merge var (and they can be used with other segmentation
+    options), though performance may degrade at that point. Saved Segments (called "auto-updating" in the app) are essentially just the match+conditions typically
+    used.
+        @param {Object} params the hash of the parameters to pass to the request
+        @option params {String} id the list id to connect to. Get by calling lists/list()
+        @option params {Struct} opts various options for the new segment
+             - type {String} either "static" or "saved"
+             - name {String} a unique name per list for the segment - 100 byte maximum length, anything longer will throw an error
+             - segment_opts {Object} for "saved" only, the standard segment match+conditions, just like campaigns/segment-test
+                 - match {String} "any" or "all"
+                 - conditions {Array} structs for each condition, just like campaigns/segment-test
+        @param {Function} onsuccess an optional callback to execute when the API call is successfully made
+        @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
+    */
+
+    Lists.prototype.segmentAdd = function(params, onsuccess, onerror) {
+      var _ref;
+      if (params == null) params = {};
+      _ref = this.master.parseArgs(params, onsuccess, onerror), params = _ref[0], onsuccess = _ref[1], onerror = _ref[2];
+      return this.master.call('lists/segment-add', params, onsuccess, onerror);
+    };
+
+    /*
+        Delete a segment. Note that this will, of course, remove any member affiliations with any static segments deleted
+        @param {Object} params the hash of the parameters to pass to the request
+        @option params {String} id the list id to connect to. Get by calling lists/list()
+        @option params {Int} seg_id the id of the static segment to delete - get from lists/static-segments()
+        @param {Function} onsuccess an optional callback to execute when the API call is successfully made
+        @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
+    */
+
+    Lists.prototype.segmentDel = function(params, onsuccess, onerror) {
+      var _ref;
+      if (params == null) params = {};
+      _ref = this.master.parseArgs(params, onsuccess, onerror), params = _ref[0], onsuccess = _ref[1], onerror = _ref[2];
+      return this.master.call('lists/segment-del', params, onsuccess, onerror);
+    };
+
+    /*
+        Allows one to test their segmentation rules before creating a campaign using them - this is no different from campaigns/segment-test() and will eventually replace it.
+    For the time being, the crazy segmenting condition documentation will continue to live over there.
+        @param {Object} params the hash of the parameters to pass to the request
+        @option params {String} list_id the list to test segmentation on - get lists using lists/list()
+        @option params {Struct} options with 1 or 2 keys:
+             - saved_segment_id {String} a saved segment id from lists/segments() - this will take precendence, otherwise the match+conditions are required.
+             - match {String} controls whether to use AND or OR when applying your options - expects "<strong>any</strong>" (for OR) or "<strong>all</strong>" (for AND)
+             - conditions {Array} of up to 5 structs for different criteria to apply while segmenting. Each criteria row must contain 3 keys - "<strong>field</strong>", "<strong>op</strong>", and "<strong>value</strong>" - and possibly a fourth, "<strong>extra</strong>", based on these definitions:
+        @param {Function} onsuccess an optional callback to execute when the API call is successfully made
+        @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
+    */
+
+    Lists.prototype.segmentTest = function(params, onsuccess, onerror) {
+      var _ref;
+      if (params == null) params = {};
+      _ref = this.master.parseArgs(params, onsuccess, onerror), params = _ref[0], onsuccess = _ref[1], onerror = _ref[2];
+      return this.master.call('lists/segment-test', params, onsuccess, onerror);
+    };
+
+    /*
+        Update an existing segment. The list and type can not be changed.
+        @param {Object} params the hash of the parameters to pass to the request
+        @option params {String} id the list id to connect to. Get by calling lists/list()
+        @option params {Int} seg_id the segment to updated. Get by calling lists/segments()
+        @option params {Struct} opts various options to update
+             - name {String} a unique name per list for the segment - 100 byte maximum length, anything longer will throw an error
+             - segment_opts {Object} for "saved" only, the standard segment match+conditions, just like campaigns/segment-test
+                 - match {Object} "any" or "all"
+                 - conditions {Array} structs for each condition, just like campaigns/segment-test
+        @param {Function} onsuccess an optional callback to execute when the API call is successfully made
+        @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
+    */
+
+    Lists.prototype.segmentUpdate = function(params, onsuccess, onerror) {
+      var _ref;
+      if (params == null) params = {};
+      _ref = this.master.parseArgs(params, onsuccess, onerror), params = _ref[0], onsuccess = _ref[1], onerror = _ref[2];
+      return this.master.call('lists/segment-update', params, onsuccess, onerror);
+    };
+
+    /*
         Save a segment against a list for later use. There is no limit to the number of segments which can be saved. Static Segments <strong>are not</strong> tied
     to any merge data, interest groups, etc. They essentially allow you to configure an unlimited number of custom segments which will have standard performance.
     When using proper segments, Static Segments are one of the available options for segmentation just as if you used a merge var (and they can be used with other segmentation
     options), though performance may degrade at that point.
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} id the list id to connect to. Get by calling lists()
+        @option params {String} id the list id to connect to. Get by calling lists/list()
         @option params {String} name a unique name per list for the segment - 100 byte maximum length, anything longer will throw an error
         @param {Function} onsuccess an optional callback to execute when the API call is successfully made
         @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
@@ -1177,8 +1290,8 @@
     /*
         Delete a static segment. Note that this will, of course, remove any member affiliations with the segment
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} id the list id to connect to. Get by calling lists()
-        @option params {Int} seg_id the id of the static segment to delete - get from listStaticSegments()
+        @option params {String} id the list id to connect to. Get by calling lists/list()
+        @option params {Int} seg_id the id of the static segment to delete - get from lists/static-segments()
         @param {Function} onsuccess an optional callback to execute when the API call is successfully made
         @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
     */
@@ -1194,13 +1307,12 @@
         Add list members to a static segment. It is suggested that you limit batch size to no more than 10,000 addresses per call. Email addresses must exist on the list
     in order to be included - this <strong>will not</strong> subscribe them to the list!
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} id the list id to connect to. Get by calling lists()
-        @option params {Int} seg_id the id of the static segment to modify - get from listStaticSegments()
-        @option params {Array} batch an array of structs for each address using the following keys:
-             - email {Object} a struct with one of the following keys - failing to provide anything will produce an error relating to the email address. Provide multiples and we'll use the first we see in this same order.
-                 - email {String} an email address
-                 - euid {String} the unique id for an email address (not list related) - the email "id" returned from listMemberInfo, Webhooks, Campaigns, etc.
-                 - leid {String} the list email id (previously called web_id) for a list-member-info type call. this doesn't change when the email address changes
+        @option params {String} id the list id to connect to. Get by calling lists/list()
+        @option params {Int} seg_id the id of the static segment to modify - get from lists/static-segments()
+        @option params {Array} batch an array of structs for   each address using the following keys:
+             - email {String} an email address
+             - euid {String} the unique id for an email address (not list related) - the email "id" returned from listMemberInfo, Webhooks, Campaigns, etc.
+             - leid {String} the list email id (previously called web_id) for a list-member-info type call. this doesn't change when the email address changes
         @param {Function} onsuccess an optional callback to execute when the API call is successfully made
         @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
     */
@@ -1216,13 +1328,12 @@
         Remove list members from a static segment. It is suggested that you limit batch size to no more than 10,000 addresses per call. Email addresses must exist on the list
     in order to be removed - this <strong>will not</strong> unsubscribe them from the list!
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} id the list id to connect to. Get by calling lists()
-        @option params {Int} seg_id the id of the static segment to delete - get from listStaticSegments()
-        @option params {Array} batch an array of structs for each address using the following keys:
-             - email {Object} a struct with one of the following keys - failing to provide anything will produce an error relating to the email address. Provide multiples and we'll use the first we see in this same order.
-                 - email {String} an email address
-                 - euid {String} the unique id for an email address (not list related) - the email "id" returned from listMemberInfo, Webhooks, Campaigns, etc.
-                 - leid {String} the list email id (previously called web_id) for a list-member-info type call. this doesn't change when the email address changes
+        @option params {String} id the list id to connect to. Get by calling lists/list()
+        @option params {Int} seg_id the id of the static segment to delete - get from lists/static-segments()
+        @option params {Array} batch an array of structs for each address using one of the following keys:
+             - email {String} an email address
+             - euid {String} the unique id for an email address (not list related) - the email "id" returned from listMemberInfo, Webhooks, Campaigns, etc.
+             - leid {String} the list email id (previously called web_id) for a list-member-info type call. this doesn't change when the email address changes
         @param {Function} onsuccess an optional callback to execute when the API call is successfully made
         @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
     */
@@ -1237,8 +1348,8 @@
     /*
         Resets a static segment - removes <strong>all</strong> members from the static segment. Note: does not actually affect list member data
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} id the list id to connect to. Get by calling lists()
-        @option params {Int} seg_id the id of the static segment to reset  - get from listStaticSegments()
+        @option params {String} id the list id to connect to. Get by calling lists/list()
+        @option params {Int} seg_id the id of the static segment to reset  - get from lists/static-segments()
         @param {Function} onsuccess an optional callback to execute when the API call is successfully made
         @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
     */
@@ -1253,7 +1364,7 @@
     /*
         Retrieve all of the Static Segments for a list.
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} id the list id to connect to. Get by calling lists()
+        @option params {String} id the list id to connect to. Get by calling lists/list()
         @param {Function} onsuccess an optional callback to execute when the API call is successfully made
         @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
     */
@@ -1315,7 +1426,7 @@
     /*
         Unsubscribe the given email address from the list
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} id the list id to connect to. Get by calling lists()
+        @option params {String} id the list id to connect to. Get by calling lists/list()
         @option params {Struct} email a struct with one of the following keys - failing to provide anything will produce an error relating to the email address. Providing multiples and will use the first we see in this same order.
              - email {String} an email address
              - euid {String} the unique id for an email address (not list related) - the email "id" returned from listMemberInfo, Webhooks, Campaigns, etc.
@@ -1339,14 +1450,14 @@
 
     /*
         Edit the email address, merge fields, and interest groups for a list member. If you are doing a batch update on lots of users,
-    consider using listBatchSubscribe() with the update_existing and possible replace_interests parameter.
+    consider using lists/batch-subscribe() with the update_existing and possible replace_interests parameter.
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} id the list id to connect to. Get by calling lists()
+        @option params {String} id the list id to connect to. Get by calling lists/list()
         @option params {Struct} email a struct with one of the following keys - failing to provide anything will produce an error relating to the email address. Providing multiples and will use the first we see in this same order.
              - email {String} an email address
              - euid {String} the unique id for an email address (not list related) - the email "id" returned from listMemberInfo, Webhooks, Campaigns, etc.
              - leid {String} the list email id (previously called web_id) for a list-member-info type call. this doesn't change when the email address changes
-        @option params {Array} merge_vars array of new field values to update the member with.  See merge_vars in listSubscribe() for details.
+        @option params {Array} merge_vars array of new field values to update the member with.  See merge_vars in lists/subscribe() for details.
         @option params {String} email_type change the email type preference for the member ("html" or "text").  Leave blank to keep the existing preference (optional)
         @option params {Boolean} replace_interests flag to determine whether we replace the interest groups with the updated groups provided, or we add the provided groups to the member's interest groups (optional, defaults to true)
         @param {Function} onsuccess an optional callback to execute when the API call is successfully made
@@ -1365,7 +1476,7 @@
     /*
         Add a new Webhook URL for the given list
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} id the list id to connect to. Get by calling lists()
+        @option params {String} id the list id to connect to. Get by calling lists/list()
         @option params {String} url a valid URL for the Webhook - it will be validated. note that a url may only exist on a list once.
         @option params {Struct} actions optional a hash of actions to fire this Webhook for
              - subscribe {Bool} optional as subscribes occur, defaults to true
@@ -1394,7 +1505,7 @@
     /*
         Delete an existing Webhook URL from a given list
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} id the list id to connect to. Get by calling lists()
+        @option params {String} id the list id to connect to. Get by calling lists/list()
         @option params {String} url the URL of a Webhook on this list
         @param {Function} onsuccess an optional callback to execute when the API call is successfully made
         @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
@@ -1410,7 +1521,7 @@
     /*
         Return the Webhooks configured for the given list
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} id the list id to connect to. Get by calling lists()
+        @option params {String} id the list id to connect to. Get by calling lists/list()
         @param {Function} onsuccess an optional callback to execute when the API call is successfully made
         @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
     */
@@ -1431,8 +1542,8 @@
              - from_name {String} optional - only lists that have a default from name matching this
              - from_email {String} optional - only lists that have a default from email matching this
              - from_subject {String} optional - only lists that have a default from email matching this
-             - created_before {String} optional - only show lists that were created before this date/time  - 24 hour format in <strong>GMT</strong>, eg "2013-12-30 20:30:00"
-             - created_after {String} optional - only show lists that were created since this date/time  - 24 hour format in <strong>GMT</strong>, eg "2013-12-30 20:30:00"
+             - created_before {String} optional - only show lists that were created before this date+time  - 24 hour format in <strong>GMT</strong>, eg "2013-12-30 20:30:00"
+             - created_after {String} optional - only show lists that were created since this date+time  - 24 hour format in <strong>GMT</strong>, eg "2013-12-30 20:30:00"
              - exact {Boolean} optional - flag for whether to filter on exact values when filtering, or search within content for filter values - defaults to true
         @option params {Int} start optional - control paging of lists, start results at this list #, defaults to 1st page of data  (page 0)
         @option params {Int} limit optional - control paging of lists, number of lists to return with each call, defaults to 25 (max=100)
@@ -1467,7 +1578,7 @@
     /*
         Get the content (both html and text) for a campaign either as it would appear in the campaign archive or as the raw, original content
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} cid the campaign id to get content for (can be gathered using campaign/list())
+        @option params {String} cid the campaign id to get content for (can be gathered using campaigns/list())
         @option params {Struct} options various options to control this call
              - view {String} optional one of "archive" (default), "preview" (like our popup-preview) or "raw"
              - email {Object} optional if provided, view is "archive" or "preview", the campaign's list still exists, and the requested record is subscribed to the list. the returned content will be populated with member data populated. a struct with one of the following keys - failing to provide anything will produce an error relating to the email address. Providing multiples and will use the first we see in this same order.
@@ -1491,7 +1602,7 @@
         @param {Object} params the hash of the parameters to pass to the request
         @option params {String} type the Campaign Type to create - one of "regular", "plaintext", "absplit", "rss", "auto"
         @option params {Struct} options a struct of the standard options for this campaign :
-             - list_id {String} the list to send this campaign to- get lists using lists()
+             - list_id {String} the list to send this campaign to- get lists using lists/list()
              - subject {String} the subject line for your campaign message
              - from_email {String} the From: email address for your campaign message
              - from_name {String} the From: name for your campaign message (not an email address)
@@ -1499,7 +1610,7 @@
              - template_id {Int} optional - use this user-created template to generate the HTML content of the campaign (takes precendence over other template options)
              - gallery_template_id {Int} optional - use a template from the public gallery to generate the HTML content of the campaign (takes precendence over base template options)
              - base_template_id {Int} optional - use this a base/start-from-scratch template to generate the HTML content of the campaign
-             - folder_id {Int} optional - automatically file the new campaign in the folder_id passed. Get using folders() - note that Campaigns and Autoresponders have separate folder setupsn
+             - folder_id {Int} optional - automatically file the new campaign in the folder_id passed. Get using folders/list() - note that Campaigns and Autoresponders have separate folder setups
              - tracking {Object} optional - set which recipient actions will be tracked. Click tracking can not be disabled for Free accounts.
                  - opens {Bool} whether to track opens, defaults to true
                  - html_clicks {Bool} whether to track clicks in HTML content, defaults to true
@@ -1534,7 +1645,7 @@
              - url {String} to have us pull in content from a URL. Note, this will override any other content options - for lists with Email Format options, you'll need to turn on generate_text as well
              - archive {String} to send a Base64 encoded archive file for us to import all media from. Note, this will override any other content options - for lists with Email Format options, you'll need to turn on generate_text as well
              - archive_type {String} optional - only necessary for the "archive" option. Supported formats are: zip, tar.gz, tar.bz2, tar, tgz, tbz . If not included, we will default to zip
-        @option params {Struct} segment_opts if you wish to do Segmentation with this campaign this array should contain: see campaignSegmentTest(). It's suggested that you test your options against campaignSegmentTest().
+        @option params {Struct} segment_opts if you wish to do Segmentation with this campaign this array should contain: see campaigns/segment-test(). It's suggested that you test your options against campaigns/segment-test().
         @option params {Struct} type_opts various extra options based on the campaign type
              - rss {Object} For RSS Campaigns this, struct should contain:
                  - url {String} the URL to pull RSS content from - it will be verified and must exist
@@ -1551,7 +1662,7 @@
                      - 6 {Bool} optional Saturday, defaults to true
                      - 7 {Bool} optional Sunday, defaults to true
              - absplit {Object} For A/B Split campaigns, this struct should contain:
-                 - split_test {String} The values to segment based on. Currently, one of: "subject", "from_name", "schedule". NOTE, for "schedule", you will need to call campaignSchedule() separately!
+                 - split_test {String} The values to segment based on. Currently, one of: "subject", "from_name", "schedule". NOTE, for "schedule", you will need to call campaigns/schedule() separately!
                  - pick_winner {String} How the winner will be picked, one of: "opens" (by the open_rate), "clicks" (by the click rate), "manual" (you pick manually)
                  - wait_units {Int} optional the default time unit to wait before auto-selecting a winner - use "3600" for hours, "86400" for days. Defaults to 86400.
                  - wait_time {Int} optional the number of units to wait before auto-selecting a winner - defaults to 1, so if not set, a winner will be selected after 1 Day.
@@ -1614,9 +1725,9 @@
         @option params {Struct} filters a struct of filters to apply to this query - all are optional:
              - campaign_id {String} optional - return the campaign using a know campaign_id.  Accepts multiples separated by commas when not using exact matching.
              - parent_id {String} optional - return the child campaigns using a known parent campaign_id.  Accepts multiples separated by commas when not using exact matching.
-             - list_id {String} optional - the list to send this campaign to - get lists using lists(). Accepts multiples separated by commas when not using exact matching.
-             - folder_id {Int} optional - only show campaigns from this folder id - get folders using campaignFolders(). Accepts multiples separated by commas when not using exact matching.
-             - template_id {Int} optional - only show campaigns using this template id - get templates using templates(). Accepts multiples separated by commas when not using exact matching.
+             - list_id {String} optional - the list to send this campaign to - get lists using lists/list(). Accepts multiples separated by commas when not using exact matching.
+             - folder_id {Int} optional - only show campaigns from this folder id - get folders using folders/list(). Accepts multiples separated by commas when not using exact matching.
+             - template_id {Int} optional - only show campaigns using this template id - get templates using templates/list(). Accepts multiples separated by commas when not using exact matching.
              - status {String} optional - return campaigns of a specific status - one of "sent", "save", "paused", "schedule", "sending". Accepts multiples separated by commas when not using exact matching.
              - type {String} optional - return campaigns of a specific type - one of "regular", "plaintext", "absplit", "rss", "auto". Accepts multiples separated by commas when not using exact matching.
              - from_name {String} optional - only show campaigns that have this "From Name"
@@ -1748,8 +1859,9 @@
     /*
         Allows one to test their segmentation rules before creating a campaign using them
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} list_id the list to test segmentation on - get lists using lists()
-        @option params {Struct} options with 2 keys:
+        @option params {String} list_id the list to test segmentation on - get lists using lists/list()
+        @option params {Struct} options with 1 or 2 keys:
+             - saved_segment_id {String} a saved segment id from lists/segments() - this will take precendence, otherwise the match+conditions are required.
              - match {String} controls whether to use AND or OR when applying your options - expects "<strong>any</strong>" (for OR) or "<strong>all</strong>" (for AND)
              - conditions {Array} of up to 5 structs for different criteria to apply while segmenting. Each criteria row must contain 3 keys - "<strong>field</strong>", "<strong>op</strong>", and "<strong>value</strong>" - and possibly a fourth, "<strong>extra</strong>", based on these definitions:
         @param {Function} onsuccess an optional callback to execute when the API call is successfully made
@@ -1801,7 +1913,7 @@
         Get the HTML template content sections for a campaign. Note that this <strong>will</strong> return very jagged, non-standard results based on the template
     a campaign is using. You only want to use this if you want to allow editing template sections in your application.
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} cid the campaign id to get content for (can be gathered using campaigns())
+        @option params {String} cid the campaign id to get content for (can be gathered using campaigns/list())
         @param {Function} onsuccess an optional callback to execute when the API call is successfully made
         @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
     */
@@ -1829,17 +1941,17 @@
     };
 
     /*
-        Update just about any setting besides type for a campaign that has <em>not</em> been sent. See campaign/create for details.
+        Update just about any setting besides type for a campaign that has <em>not</em> been sent. See campaigns/create() for details.
     Caveats:<br/><ul class='bullets'>
     <li>If you set a new list_id, all segmentation options will be deleted and must be re-added.</li>
     <li>If you set template_id, you need to follow that up by setting it's 'content'</li>
-    <li>If you set segment_opts, you should have tested your options against campaign/segment-test().</li>
+    <li>If you set segment_opts, you should have tested your options against campaigns/segment-test().</li>
     <li>To clear/unset segment_opts, pass an empty string or array as the value. Various wrappers may require one or the other.</li>
     </ul>
         @param {Object} params the hash of the parameters to pass to the request
         @option params {String} cid the Campaign Id to update
-        @option params {String} name the parameter name ( see campaign/create ). This will be that parameter name (options, content, segment_opts) except "type_opts", which will be the name of the type - rss, auto, etc. The campaign "type" can not be changed.
-        @option params {Array} value an appropriate set of values for the parameter ( see campaign/create ). For additional parameters, this is the same value passed to them.
+        @option params {String} name the parameter name ( see campaigns/create() ). This will be that parameter name (options, content, segment_opts) except "type_opts", which will be the name of the type - rss, auto, etc. The campaign "type" can not be changed.
+        @option params {Array} value an appropriate set of values for the parameter ( see campaigns/create() ). For additional parameters, this is the same value passed to them.
         @param {Function} onsuccess an optional callback to execute when the API call is successfully made
         @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
     */
@@ -1878,7 +1990,7 @@
     /*
         Add VIPs (previously called Golden Monkeys)
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} id the list id to connect to. Get by calling lists()
+        @option params {String} id the list id to connect to. Get by calling lists/list()
         @option params {Array} emails an array of up to 50 email address structs to add, each with with one of the following keys
              - email {String} an email address - for new subscribers obviously this should be used
              - euid {String} the unique id for an email address (not list related) - the email "id" returned from listMemberInfo, Webhooks, Campaigns, etc.
@@ -1897,7 +2009,7 @@
     /*
         Remove VIPs - this does not affect list membership
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} id the list id to connect to. Get by calling lists()
+        @option params {String} id the list id to connect to. Get by calling lists/list()
         @option params {Array} emails an array of up to 50 email address structs to remove, each with with one of the following keys
              - email {String} an email address - for new subscribers obviously this should be used
              - euid {String} the unique id for an email address (not list related) - the email "id" returned from listMemberInfo, Webhooks, Campaigns, etc.
@@ -1940,7 +2052,7 @@
     /*
         Get all email addresses that complained about a given campaign
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} cid the campaign id to pull abuse reports for (can be gathered using campaigns())
+        @option params {String} cid the campaign id to pull abuse reports for (can be gathered using campaigns/list())
         @option params {Struct} opts various options for controlling returned data
              - start {Int} optional for large data sets, the page number to start at - defaults to 1st page of data  (page 0)
              - limit {Int} optional for large data sets, the number of results to return - defaults to 25, upper limit set at 100
@@ -1961,7 +2073,7 @@
         Retrieve the text presented in our app for how a campaign performed and any advice we may have for you - best
     suited for display in customized reports pages. Note: some messages will contain HTML - clean tags as necessary
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} cid the campaign id to pull advice text for (can be gathered using campaigns())
+        @option params {String} cid the campaign id to pull advice text for (can be gathered using campaigns/list())
         @param {Function} onsuccess an optional callback to execute when the API call is successfully made
         @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
     */
@@ -1977,7 +2089,7 @@
         Retrieve the most recent full bounce message for a specific email address on the given campaign.
     Messages over 30 days old are subject to being removed
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} cid the campaign id to pull bounces for (can be gathered using campaigns())
+        @option params {String} cid the campaign id to pull bounces for (can be gathered using campaigns/list())
         @option params {Struct} email a struct with one of the following keys - failing to provide anything will produce an error relating to the email address. Providing multiples and will use the first we see in this same order.
              - email {String} an email address - this is recommended for this method
              - euid {String} the unique id for an email address (not list related) - the email "id" returned from listMemberInfo, Webhooks, Campaigns, etc.
@@ -1998,7 +2110,7 @@
     of data depending on how large the campaign was and how much cruft the bounce provider returned. Also,
     messages over 30 days old are subject to being removed
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} cid the campaign id to pull bounces for (can be gathered using campaigns())
+        @option params {String} cid the campaign id to pull bounces for (can be gathered using campaigns/list())
         @option params {Struct} opts various options for controlling returned data
              - start {Int} optional for large data sets, the page number to start at - defaults to 1st page of data  (page 0)
              - limit {Int} optional for large data sets, the number of results to return - defaults to 25, upper limit set at 100
@@ -2018,7 +2130,7 @@
     /*
         Return the list of email addresses that clicked on a given url, and how many times they clicked
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} cid the campaign id to get click stats for (can be gathered using campaigns())
+        @option params {String} cid the campaign id to get click stats for (can be gathered using campaigns/list())
         @option params {Int} tid the "tid" for the URL from reports/clicks
         @option params {Struct} opts various options for controlling returned data
              - start {Int} optional for large data sets, the page number to start at - defaults to 1st page of data  (page 0)
@@ -2040,7 +2152,7 @@
     /*
         The urls tracked and their click counts for a given campaign.
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} cid the campaign id to pull stats for (can be gathered using campaigns())
+        @option params {String} cid the campaign id to pull stats for (can be gathered using campaigns/list())
         @param {Function} onsuccess an optional callback to execute when the API call is successfully made
         @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
     */
@@ -2053,9 +2165,9 @@
     };
 
     /*
-        Retrieve the Ecommerce Orders tracked by campaignEcommOrderAdd()
+        Retrieve the Ecommerce Orders tracked by ecomm/order-add()
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} cid the campaign id to pull orders for for (can be gathered using campaigns())
+        @option params {String} cid the campaign id to pull orders for for (can be gathered using campaigns/list())
         @option params {Struct} opts various options for controlling returned data
              - start {Int} optional for large data sets, the page number to start at - defaults to 1st page of data  (page 0)
              - limit {Int} optional for large data sets, the number of results to return - defaults to 25, upper limit set at 100
@@ -2075,7 +2187,7 @@
     /*
         Retrieve the eepurl stats from the web/Twitter mentions for this campaign
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} cid the campaign id to pull stats for (can be gathered using campaigns())
+        @option params {String} cid the campaign id to pull stats for (can be gathered using campaigns/list())
         @param {Function} onsuccess an optional callback to execute when the API call is successfully made
         @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
     */
@@ -2092,7 +2204,7 @@
     and/or get incremental results, you should use the <a href="http://apidocs.mailchimp.com/export/1.0/campaignsubscriberactivity.func.php" targret="_new">campaignSubscriberActivity Export API method</a>,
     <strong>not</strong> this, especially for large campaigns.
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} cid the campaign id to get stats for (can be gathered using campaigns())
+        @option params {String} cid the campaign id to get stats for (can be gathered using campaigns/list())
         @option params {Array} emails an array of up to 50 email address struct to retrieve activity information for
              - email {String} an email address
              - euid {String} the unique id for an email address (not list related) - the email "id" returned from listMemberInfo, Webhooks, Campaigns, etc.
@@ -2111,7 +2223,7 @@
     /*
         Retrieve the list of email addresses that did not open a given campaign
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} cid the campaign id to get no opens for (can be gathered using campaigns())
+        @option params {String} cid the campaign id to get no opens for (can be gathered using campaigns/list())
         @option params {Struct} opts various options for controlling returned data
              - start {Int} optional for large data sets, the page number to start at - defaults to 1st page of data  (page 0)
              - limit {Int} optional for large data sets, the number of results to return - defaults to 25, upper limit set at 100
@@ -2130,7 +2242,7 @@
     /*
         Retrieve the list of email addresses that opened a given campaign with how many times they opened
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} cid the campaign id to get opens for (can be gathered using campaigns())
+        @option params {String} cid the campaign id to get opens for (can be gathered using campaigns/list())
         @option params {Struct} opts various options for controlling returned data
              - start {Int} optional for large data sets, the page number to start at - defaults to 1st page of data  (page 0)
              - limit {Int} optional for large data sets, the number of results to return - defaults to 25, upper limit set at 100
@@ -2149,10 +2261,10 @@
     };
 
     /*
-        Get the top 5 performing email domains for this campaign. Users wanting more than 5 should use campaign campaignEmailStatsAIM()
+        Get the top 5 performing email domains for this campaign. Users wanting more than 5 should use campaign reports/member-activity()
     or campaignEmailStatsAIMAll() and generate any additional stats they require.
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} cid the campaign id to pull email domain performance for (can be gathered using campaigns())
+        @option params {String} cid the campaign id to pull email domain performance for (can be gathered using campaigns/list())
         @param {Function} onsuccess an optional callback to execute when the API call is successfully made
         @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
     */
@@ -2167,7 +2279,7 @@
     /*
         Retrieve the countries/regions and number of opens tracked for each. Email address are not returned.
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} cid the campaign id to pull bounces for (can be gathered using campaigns())
+        @option params {String} cid the campaign id to pull bounces for (can be gathered using campaigns/list())
         @param {Function} onsuccess an optional callback to execute when the API call is successfully made
         @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
     */
@@ -2182,7 +2294,7 @@
     /*
         Retrieve the Google Analytics data we've collected for this campaign. Note, requires Google Analytics Add-on to be installed and configured.
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} cid the campaign id to pull bounces for (can be gathered using campaigns())
+        @option params {String} cid the campaign id to pull bounces for (can be gathered using campaigns/list())
         @param {Function} onsuccess an optional callback to execute when the API call is successfully made
         @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
     */
@@ -2197,7 +2309,7 @@
     /*
         Get email addresses the campaign was sent to
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} cid the campaign id to pull members for (can be gathered using campaigns())
+        @option params {String} cid the campaign id to pull members for (can be gathered using campaigns/list())
         @option params {Struct} opts various options for controlling returned data
              - status {String} optional the status to pull - one of 'sent', 'hard' (bounce), or 'soft' (bounce). By default, all records are returned
              - start {Int} optional for large data sets, the page number to start at - defaults to 1st page of data  (page 0)
@@ -2217,7 +2329,7 @@
     /*
         Get the URL to a customized <a href="http://eepurl.com/gKmL" target="_blank">VIP Report</a> for the specified campaign and optionally send an email to someone with links to it. Note subsequent calls will overwrite anything already set for the same campign (eg, the password)
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} cid the campaign id to share a report for (can be gathered using campaigns())
+        @option params {String} cid the campaign id to share a report for (can be gathered using campaigns/list())
         @option params {Array} opts optional various parameters which can be used to configure the shared report
              - to_email {String} optional - optional, comma delimited list of email addresses to share the report with - no value means an email will not be sent
              - theme_id {Int} optional - either a global or a user-specific theme id. Currently this needs to be pulled out of either the Share Report or Cobranding web views by grabbing the "theme" attribute from the list presented.
@@ -2237,7 +2349,7 @@
     /*
         Retrieve relevant aggregate campaign statistics (opens, bounces, clicks, etc.)
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} cid the campaign id to pull stats for (can be gathered using campaigns())
+        @option params {String} cid the campaign id to pull stats for (can be gathered using campaigns/list())
         @param {Function} onsuccess an optional callback to execute when the API call is successfully made
         @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
     */
@@ -2252,7 +2364,7 @@
     /*
         Get all unsubscribed email addresses for a given campaign
         @param {Object} params the hash of the parameters to pass to the request
-        @option params {String} cid the campaign id to pull bounces for (can be gathered using campaigns())
+        @option params {String} cid the campaign id to pull bounces for (can be gathered using campaigns/list())
         @option params {Struct} opts various options for controlling returned data
              - start {Int} optional for large data sets, the page number to start at - defaults to 1st page of data  (page 0)
              - limit {Int} optional for large data sets, the number of results to return - defaults to 25, upper limit set at 100
