@@ -6,7 +6,7 @@ OPTS = {
     port:   443,
     prefix: '/2.0/',
     method: 'POST',
-    headers: {'Content-Type': 'application/json', 'User-Agent': 'MailChimp-Node/2.0.6'}
+    headers: {'Content-Type': 'application/json', 'User-Agent': 'MailChimp-Node/2.0.7'}
 }
 
 class exports.Mailchimp
@@ -546,7 +546,7 @@ class Conversations
         @master.call('conversations/messages', params, onsuccess, onerror)
 
     ###
-    Retrieve conversation messages
+    Reply to a conversation
     @param {Object} params the hash of the parameters to pass to the request
     @option params {String} conversation_id the unique_id of the conversation to retrieve the messages for, can be obtained by calling converstaions/list().
     @option params {String} message the text of the message you want to send.
@@ -581,7 +581,7 @@ class Ecomm
              - line_num {Int} optional the line number of the item on the order. We will generate these if they are not passed
              - product_id {Int} the store's internal Id for the product. Lines that do no contain this will be skipped
              - sku {String} optional the store's internal SKU for the product. (max 30 bytes)
-             - product_name {String} the product name for the product_id associated with this item. We will auto update these as they change (based on product_id)
+             - product_name {String} the product name for the product_id associated with this item. We will auto update these as they change (based on product_id) (max 500 bytes)
              - category_id {Int} (required) the store's internal Id for the (main) category associated with this product. Our testing has found this to be a "best guess" scenario
              - category_name {String} (required) the category name for the category_id this product is in. Our testing has found this to be a "best guess" scenario. Our plugins walk the category heirarchy up and send "Root - SubCat1 - SubCat4", etc.
              - qty {Double} optional the quantity of the item ordered - defaults to 1
@@ -1150,9 +1150,9 @@ in order to be included - this <strong>will not</strong> subscribe them to the l
     @param {Object} params the hash of the parameters to pass to the request
     @option params {String} id the list id to connect to. Get by calling lists/list()
     @option params {Int} seg_id the id of the static segment to modify - get from lists/static-segments()
-    @option params {Array} batch an array of structs for   each address using the following keys:
+    @option params {Array} batch an array of email structs, each with with one of the following keys:
          - email {String} an email address
-         - euid {String} the unique id for an email address (not list related) - the email "id" returned from listMemberInfo, Webhooks, Campaigns, etc.
+         - euid {String} the unique id for an email address (not list related) - the email "id" returned from lists/member-info(), Webhooks, Campaigns, etc.
          - leid {String} the list email id (previously called web_id) for a list-member-info type call. this doesn't change when the email address changes
     @param {Function} onsuccess an optional callback to execute when the API call is successfully made
     @param {Function} onerror an optional callback to execute when the API call errors out - defaults to throwing the error as an exception
@@ -1292,7 +1292,7 @@ consider using lists/batch-subscribe() with the update_existing and possible rep
          - email {String} an email address
          - euid {String} the unique id for an email address (not list related) - the email "id" returned from listMemberInfo, Webhooks, Campaigns, etc.
          - leid {String} the list email id (previously called web_id) for a list-member-info type call. this doesn't change when the email address changes
-    @option params {Array} merge_vars array of new field values to update the member with.  See merge_vars in lists/subscribe() for details.
+    @option params {Struct} merge_vars new field values to update the member with.  See merge_vars in lists/subscribe() for details.
     @option params {String} email_type change the email type preference for the member ("html" or "text").  Leave blank to keep the existing preference (optional)
     @option params {Boolean} replace_interests flag to determine whether we replace the interest groups with the updated groups provided, or we add the provided groups to the member's interest groups (optional, defaults to true)
     @param {Function} onsuccess an optional callback to execute when the API call is successfully made
@@ -1371,7 +1371,7 @@ consider using lists/batch-subscribe() with the update_existing and possible rep
          - from_subject {String} optional - only lists that have a default from email matching this
          - created_before {String} optional - only show lists that were created before this date+time  - 24 hour format in <strong>GMT</strong>, eg "2013-12-30 20:30:00"
          - created_after {String} optional - only show lists that were created since this date+time  - 24 hour format in <strong>GMT</strong>, eg "2013-12-30 20:30:00"
-         - exact {Boolean} optional - flag for whether to filter on exact values when filtering, or search within content for filter values - defaults to true
+         - exact {Boolean} optional - flag for whether to filter on exact values when filtering, or search within content for filter values - defaults to false
     @option params {Int} start optional - control paging of lists, start results at this list #, defaults to 1st page of data  (page 0)
     @option params {Int} limit optional - control paging of lists, number of lists to return with each call, defaults to 25 (max=100)
     @option params {String} sort_field optional - "created" (the created date, default) or "web" (the display order in the web app). Invalid values will fall back on "created" - case insensitive.
@@ -1445,7 +1445,7 @@ class Campaigns
          - fb_comments {Boolean} optional If true, the Facebook comments (and thus the <a href="http://kb.mailchimp.com/article/i-dont-want-an-archiave-of-my-campaign-can-i-turn-it-off/" target="_blank">archive bar</a> will be displayed. If false, Facebook comments will not be enabled (does not imply no archive bar, see previous link). Defaults to "true".
          - timewarp {Boolean} optional If set, this campaign must be scheduled 24 hours in advance of sending - default to false. Only valid for "regular" campaigns and "absplit" campaigns that split on schedule_time.
          - ecomm360 {Boolean} optional If set, our <a href="http://www.mailchimp.com/blog/ecommerce-tracking-plugin/" target="_blank">Ecommerce360 tracking</a> will be enabled for links in the campaign
-         - crm_tracking {Array} optional If set, an array of structs to enable CRM tracking for:
+         - crm_tracking {Object} optional If set, a struct to enable CRM tracking for:
              - salesforce {Object} optional Enable SalesForce push back
                  - campaign {Bool} optional - if true, create a Campaign object and update it with aggregate stats
                  - notes {Bool} optional - if true, attempt to update Contact notes based on email address
